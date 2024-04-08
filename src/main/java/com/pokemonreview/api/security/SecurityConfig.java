@@ -31,7 +31,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            JwtAuthEntryPoint authEntryPoint,
+            JWTGenerator jwtGenerator,
+            CustomUserDetailsService userDetailsService
+    ) throws Exception {
         http
                 .csrf().disable()
                 .exceptionHandling()
@@ -45,7 +50,12 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
                 .and()
                 .httpBasic();
-        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(
+                jwtAuthenticationFilter(
+                        jwtGenerator,
+                        userDetailsService
+                ), UsernamePasswordAuthenticationFilter.class
+        );
         return http.build();
     }
 
@@ -61,7 +71,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public  JWTAuthenticationFilter jwtAuthenticationFilter() {
-        return new JWTAuthenticationFilter();
+    public JWTAuthenticationFilter jwtAuthenticationFilter(
+            JWTGenerator jwtGenerator,
+            CustomUserDetailsService userDetailsService
+    ) {
+        return new JWTAuthenticationFilter(jwtGenerator, userDetailsService);
     }
 }
